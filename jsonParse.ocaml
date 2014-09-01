@@ -1,0 +1,9 @@
+type jsonToken = {  tokenType: int; tokenValue: string  }
+
+let tokenize jsonString =
+    match jsonString.[0] with
+        ('a') -> true
+ |      ('b') -> false
+
+let jsonParse jsonString =
+    tokenize jsonString
