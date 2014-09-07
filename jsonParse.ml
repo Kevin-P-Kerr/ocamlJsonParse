@@ -1,3 +1,4 @@
+open Printexc
 open String
 (* TODO: figure out how to not clobber library functions *)
 let stringLength = length
@@ -48,14 +49,20 @@ let parseFalse s =
   restPart = sub s 4 (stringLength s -4) in
   if truePart == "false" then restPart else invalid_arg "parseTrue"
 
-let rec parseString s =
-  let rest = sub s 1 (stringLength s-1) in
-  let restOfrest = sub rest 1 (stringLength rest -1) in
-  if stringLength s == 0 then invalid_arg "bad string" else
-    let currentChar = get rest 0 in
+let parseString s =
+  let rest = sub s 1 (stringLength s-1)
+  and currentChar = get s 0 in
+  let rec parse s = 
+    if stringLength s == 0 then invalid_arg "bad string" else
+    let currentChar = get s 0
+    and rest = sub s 1 (stringLength s-1) in
     match currentChar with
-    '"' -> restOfrest
-    | _ -> parseString restOfrest
+    '"' -> rest
+    | _ -> parse rest
+  in
+  match currentChar with
+  '"' -> parse rest
+  | _ -> invalid_arg "bad string"
 
 let jsonTokenize jsonString =
   let rec tokenize partialString partialList =
@@ -81,3 +88,5 @@ let jsonParse jsonString =
   jsonTokenize jsonString
   (* let jsonTokenList = jsonTokenize(jsonString) in
   internalJsonParse jsonTokenList *)
+
+let x = jsonParse "{\"foo\":2}"
