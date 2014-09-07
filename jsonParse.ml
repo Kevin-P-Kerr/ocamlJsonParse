@@ -88,11 +88,50 @@ let jsonTokenize jsonString =
        | ' ' -> tokenize rest partialList
        | _   -> if isNumber partialString then tokenize (parseNumber partialString).rest (append partialList [{tokenType=NUMBER; tokenVal=(parseNumber partialString).parsed}]) else invalid_arg "bad attempt to tokenize" in
         tokenize jsonString []
-        
+(* parsing functions *)
+let validateTokenType token t = 
+  if token.tokenType != t then false else true
+
+let rec parseObject tokenList = 
+  let currentToken = hd tokenList in
+  if currentToken.tokenType != LCURLY 
+    then invalid_arg "bad object" 
+    else let truncatedList = parseMembers tokenList in
+      let nextToken = hd truncatedList in
+      if nextToken.tokenType != RCURLY then invalid_arg "unmatched curlies" else tl tokenList
+and parseMembers tokenList =
+  let truncatedList = parsePairs tokenList in
+  let token = hd truncatedList in
+  if validateTokenType token COMMA then parseMembers tl truncatedList else truncatedList
+and parsePairs tokenList = 
+  let currentToken = hd tokenList in
+  if validateTokenType currentToken STRING then parseValue tl tokenList else invalid_arg "pair does not lead with string"
+and parseValue tokenList =
+  let currentToken = hd tokenList in
+  match currentToken.type with
+  STRING -> tl tokenList
+  NUMBER -> tl tokenList
+  BOOL   -> tl tokenList
+  (* TODO: add null *)
+  LCURLY -> parseObject tl tokenList
+  LBRAK  -> parseArray tl tokenList
+  _      -> invalid_arg "failed to parse value"
+and parseArray tokenList =  
+
+  let currentToken = hd tokenList and
+  restToken = tl tokenList in
+  if validateTokenType currentToken STRING
+    then
+    let nextToken = hd restToken in
+    if validateTokenType nextToken DELIMITTER
+      then
+      let nextToken = hd tl restToken
 
 let jsonParse jsonString =
-  jsonTokenize jsonString
-  (* let jsonTokenList = jsonTokenize(jsonString) in
-  internalJsonParse jsonTokenList *)
+  let internalJsonParse tokenList =
+    if length tokenList == 0 then true else parseObject tokenList
+  in
+  let jsonTokenList = jsonTokenize(jsonString) in
+  internalJsonParse jsonTokenList
 
 let x = jsonParse "{\"foo\":2}"
