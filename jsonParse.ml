@@ -85,6 +85,7 @@ let jsonTokenize jsonString =
        | ']' -> tokenize rest (append partialList [{tokenType=RBRAK; tokenVal="]"}])
        | ':' -> tokenize rest (append partialList [{tokenType=DELIMITTER; tokenVal=":"}])
        | ',' -> tokenize rest (append partialList [{tokenType=COMMA; tokenVal=","}])
+       | ' ' -> tokenize rest partialList
        | _   -> if isNumber partialString then tokenize (parseNumber partialString).rest (append partialList [{tokenType=NUMBER; tokenVal=(parseNumber partialString).parsed}]) else invalid_arg "bad attempt to tokenize" in
         tokenize jsonString []
         
