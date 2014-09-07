@@ -12,7 +12,7 @@ type jsonTokenType =
   | DELIMITTER
   | COMMA
 
-type jsonToken = {type: jsonTokenType; val: string }
+type jsonToken = {tokenType: jsonTokenType; tokenVal: string; }
 
 let isNumber s = 
   let c = get s 0 in
@@ -28,7 +28,21 @@ let isNumber s =
  | '8' -> true
  | '9' -> true
  | 'e' -> true
- false
+ | _   -> false
+
+let parseNumber parseString =
+  let currentChar = get parseString 0
+  and rest = sub parseString (length parseString-1) in
+  if isNumber parseString or currentChar == '.' then parseNumber rest else parseString
+
+let parseString s =
+  let rest = sub parseString (length s-1) and
+  restOfrest = sub rest (length rest -1) in
+  if length s == 0 then invalid_arg else
+    let currentChar = get rest 0 in
+    match currentChar with
+    '"' -> restOfrest
+    | _ -> parseString restOfrest
 
 let jsonTokenize jsonString =
   let tokenize partialString partialList =
@@ -37,18 +51,19 @@ let jsonTokenize jsonString =
       let currentChar = get partialString 0
       and rest = sub partialString (length partialString -1) in
       match currentChar with
-       '{' -> tokenize rest (append partialList [{type: :LCURLY; val: "{"}])
-       | '}' -> tokenize rest (append partialList [{type: RCURLY; val: "}"}])
-       | 't' -> tokenize (parseTrue partialString) (append partialList [{type: BOOL; val: "true"}])
-       | 'f' -> tokenize (parseFalse partialString) (append partialList [{type: BOOL; val: "false"}])
-       | '"' -> tokenize (parseString partialString) (append partialList [{type: STRING; val: (parseString partialString)}])
-       | '[' -> tokenize rest (append partiallist [{type: LBRAK; val: "["}])
-       | ']' -> tokenize rest (append partiallist [{type: RBRAK; val: "]"}])
-       | ':' -> tokenize rest (append partialList [{type: DELIMITTER; val: ":"}])
-       | ',' -> tokenize rest (append partialList [{type: COMMA; val: ","}])
-       if isNumber partialString then tokenize (parseNumber partialString) (append partialList [{type: NUMBER; val: parseNumber partialString}])
+       '{' -> tokenize rest (append partialList [{tokenType=LCURLY; tokenVal="{"}])
+       | '}' -> tokenize rest (append partialList [{tokenType=RCURLY; =tokenVal: "}"}])
+       | 't' -> tokenize (parseTrue partialString) (append partialList [{tokenType=BOOL; tokenVal="true"}])
+       | 'f' -> tokenize (parseFalse partialString) (append partialList [{tokenType=BOOL; tokenVal="false"}])
+       | '"' -> tokenize (parseString partialString) (append partialList [{tokenType=STRING; tokenVal=(parseString partialString)}])
+       | '[' -> tokenize rest (append partiallist [{tokenType=LBRAK; tokenVal="["}])
+       | ']' -> tokenize rest (append partiallist [{tokenType=RBRAK; tokenVal="]"}])
+       | ':' -> tokenize rest (append partialList [{tokenType=DELIMITTER; tokenVal=":"}])
+       | ',' -> tokenize rest (append partialList [{tokenType=COMMA; tokenVal=","}])
+       | _ -> if isNumber partialString then tokenize (parseNumber partialString) (append partialList [{tokenType=NUMBER; tokenVal=(parseNumber partialString)}]) else invalid_arg
         
 
 let jsonParse jsonString =
-  let jsonTokenList = jsonTokenize(jsonString) in
-  internalJsonParse jsonTokenList
+  (* let jsonTokenList = jsonTokenize(jsonString) in
+  internalJsonParse jsonTokenList *)
+  jsonTokenize jsonString
