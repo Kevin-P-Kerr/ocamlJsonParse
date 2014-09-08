@@ -96,9 +96,9 @@ let rec parseObject tokenList =
   let currentToken = hd tokenList in
   if currentToken.tokenType != LCURLY 
     then invalid_arg "bad object" 
-    else let truncatedList = parseMembers tokenList in
+    else let truncatedList = parseMembers (tl tokenList) in
       let nextToken = hd truncatedList in
-      if nextToken.tokenType != RCURLY then invalid_arg "unmatched curlies" else tl tokenList
+      if nextToken.tokenType != RCURLY then invalid_arg "unmatched curlies" else tl truncatedList
 and parseMembers tokenList =
   let truncatedList = parsePair tokenList in
   let token = hd truncatedList in
