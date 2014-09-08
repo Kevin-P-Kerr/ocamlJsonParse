@@ -117,7 +117,7 @@ and parseValue tokenList =
   |NUMBER -> tl tokenList
   |BOOL   -> tl tokenList
   (* TODO: add null *)
-  |LCURLY -> parseObject (tl tokenList)
+  |LCURLY -> parseObject tokenList (* TODO: the convention for all parsing functions should be the same, whether they check their first character of input or not *)
   |LBRAK  -> parseArray (tl tokenList)
   |_      -> invalid_arg "failed to parse value"
 and parseArray tokenList =  
