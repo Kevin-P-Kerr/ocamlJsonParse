@@ -102,36 +102,37 @@ let rec parseObject tokenList =
 and parseMembers tokenList =
   let truncatedList = parsePair tokenList in
   let token = hd truncatedList in
-  if validateTokenType token COMMA then parseMembers tl truncatedList else truncatedList
+  if validateTokenType token COMMA then parseMembers (tl truncatedList) else truncatedList
 and parsePair tokenList = 
   let currentToken = hd tokenList in
   if validateTokenType currentToken STRING 
     then 
-    let nextToken = hd tl tokenList in
-      if validateTokenType nextToken DELIMITTER then parseValue tl tl tokenList else invalid_arg "no delimitter in pair"
+    let nextToken = hd (tl tokenList) in
+      if validateTokenType nextToken DELIMITTER then parseValue (tl (tl tokenList)) else invalid_arg "no delimitter in pair"
       else invalid_arg "pair does not lead with string"
 and parseValue tokenList =
   let currentToken = hd tokenList in
-  match currentToken.type with
+  match currentToken.tokenType with
   STRING -> tl tokenList
-  NUMBER -> tl tokenList
-  BOOL   -> tl tokenList
+  |NUMBER -> tl tokenList
+  |BOOL   -> tl tokenList
   (* TODO: add null *)
-  LCURLY -> parseObject tl tokenList
-  LBRAK  -> parseArray tl tokenList
-  _      -> invalid_arg "failed to parse value"
+  |LCURLY -> parseObject (tl tokenList)
+  |LBRAK  -> parseArray (tl tokenList)
+  |_      -> invalid_arg "failed to parse value"
 and parseArray tokenList =  
   let tokenRest = parseElements  tokenList in
   if validateTokenType (hd tokenRest) RBRAK then tl tokenRest else invalid_arg "no rbrak in array"
 and parseElements tokenList =
   let tokenRest = parseValue tokenList in
-  if validateTokenType (hd tokenRest) COMMA then parseElements tl tokenRest else tokenRest
+  if validateTokenType (hd tokenRest) COMMA then parseElements (tl tokenRest) else tokenRest
 
 let jsonParse jsonString =
   let internalJsonParse tokenList =
-    if length tokenList == 0 then true else parseObject tokenList
+    if length tokenList == 0 then tokenList else parseObject tokenList
   in
   let jsonTokenList = jsonTokenize(jsonString) in
-  internalJsonParse jsonTokenList
+  let finalList = internalJsonParse jsonTokenList in
+  if length finalList == 0 then true else false
 
 let x = jsonParse "{\"foo\":2}"
