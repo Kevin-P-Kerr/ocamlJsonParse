@@ -100,12 +100,16 @@ let rec parseObject tokenList =
       let nextToken = hd truncatedList in
       if nextToken.tokenType != RCURLY then invalid_arg "unmatched curlies" else tl tokenList
 and parseMembers tokenList =
-  let truncatedList = parsePairs tokenList in
+  let truncatedList = parsePair tokenList in
   let token = hd truncatedList in
   if validateTokenType token COMMA then parseMembers tl truncatedList else truncatedList
-and parsePairs tokenList = 
+and parsePair tokenList = 
   let currentToken = hd tokenList in
-  if validateTokenType currentToken STRING then parseValue tl tokenList else invalid_arg "pair does not lead with string"
+  if validateTokenType currentToken STRING 
+    then 
+    let nextToken = hd tl tokenList in
+      if validateTokenType nextToken DELIMITTER then parseValue tl tl tokenList else invalid_arg "no delimitter in pair"
+      else invalid_arg "pair does not lead with string"
 and parseValue tokenList =
   let currentToken = hd tokenList in
   match currentToken.type with
@@ -117,15 +121,11 @@ and parseValue tokenList =
   LBRAK  -> parseArray tl tokenList
   _      -> invalid_arg "failed to parse value"
 and parseArray tokenList =  
-
-  let currentToken = hd tokenList and
-  restToken = tl tokenList in
-  if validateTokenType currentToken STRING
-    then
-    let nextToken = hd restToken in
-    if validateTokenType nextToken DELIMITTER
-      then
-      let nextToken = hd tl restToken
+  let tokenRest = parseElements  tokenList in
+  if validateTokenType (hd tokenRest) RBRAK then tl tokenRest else invalid_arg "no rbrak in array"
+and parseElements tokenList =
+  let tokenRest = parseValue tokenList in
+  if validateTokenType (hd tokenRest) COMMA then parseElements tl tokenRest else tokenRest
 
 let jsonParse jsonString =
   let internalJsonParse tokenList =
