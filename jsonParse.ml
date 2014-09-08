@@ -135,4 +135,3 @@ let jsonParse jsonString =
   let finalList = internalJsonParse jsonTokenList in
   if length finalList == 0 then true else false
 
-let x = jsonParse "{\"foo\":2}"
